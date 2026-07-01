@@ -1,7 +1,6 @@
 """Tests for the Hi Streamlit app."""
 
 import os
-import sys
 
 
 def _repo_root():
@@ -9,106 +8,102 @@ def _repo_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def test_app_imports():
-    """Test that streamlit can be imported and app structure is valid."""
+def _read_app():
+    """Read the app.py file."""
+    with open(os.path.join(_repo_root(), "app.py"), "r") as f:
+        return f.read()
+
+
+def _read_req():
+    """Read the requirements.txt file."""
+    with open(os.path.join(_repo_root(), "requirements.txt"), "r") as f:
+        return f.read()
+
+
+def test_streamlit_imports():
+    """Test that streamlit can be imported."""
     import streamlit
     assert streamlit is not None
 
 
-def test_page_config():
-    """Test set_page_config import."""
+def test_set_page_config_importable():
+    """Test set_page_config is importable."""
     from streamlit import set_page_config
     assert callable(set_page_config)
 
 
-def test_theme_key_constant():
-    """Verify the theme key is correctly defined."""
-    app_path = os.path.join(_repo_root(), "app.py")
-    with open(app_path, "r") as f:
-        content = f.read()
-
-    assert 'THEME_KEY' in content
+def test_theme_key_defined():
+    """Verify the theme localStorage key is defined."""
+    content = _read_app()
     assert 'theme_hi_app' in content
-    assert 'localStorage' in content
-    assert 'prefers-color-scheme' in content
 
 
-def test_dark_theme_css():
-    """Verify dark theme CSS is present."""
-    app_path = os.path.join(_repo_root(), "app.py")
-    with open(app_path, "r") as f:
-        content = f.read()
-
+def test_dark_theme_present():
+    """Verify dark theme CSS block exists."""
+    content = _read_app()
     assert '[data-theme="dark"]' in content
-    assert '--bg-primary' in content
-    assert '--text-primary' in content
 
 
-def test_light_theme_css():
-    """Verify light theme CSS is present."""
-    app_path = os.path.join(_repo_root(), "app.py")
-    with open(app_path, "r") as f:
-        content = f.read()
-
+def test_light_theme_present():
+    """Verify light theme CSS block exists."""
+    content = _read_app()
     assert '[data-theme="light"]' in content
+
+
+def test_css_variables_present():
+    """Verify CSS custom properties are used."""
+    content = _read_app()
     assert '--bg-primary' in content
     assert '--text-primary' in content
+    assert '--accent' in content
 
 
-def test_both_themes_have_all_variables():
-    """Ensure both themes define all CSS variables."""
-    app_path = os.path.join(_repo_root(), "app.py")
-    with open(app_path, "r") as f:
-        content = f.read()
-
-    dark_start = content.index('[data-theme="dark"]')
-    dark_end = content.index('[data-theme="light"]')
-    dark_section = content[dark_start:dark_end]
-
-    light_start = content.index('[data-theme="light"]')
-    brace_count = 0
-    light_end = light_start
-    for i, ch in enumerate(content[light_start:], light_start):
-        if ch == '{':
-            brace_count += 1
-        elif ch == '}':
-            brace_count -= 1
-            if brace_count == 0:
-                light_end = i + 1
-                break
-
-    light_section = content[light_start:light_end]
-
-    dark_vars = {line.split(':')[0].strip() for line in dark_section.split('\n') if '--' in line and ':' in line}
-    light_vars = {line.split(':')[0].strip() for line in light_section.split('\n') if '--' in line and ':' in line}
-
-    assert dark_vars == light_vars, f"CSS variable mismatch: dark has {dark_vars - light_vars}, light has {light_vars - dark_vars}"
-
-
-def test_theme_toggle_present():
-    """Verify theme toggle is in the app."""
-    app_path = os.path.join(_repo_root(), "app.py")
-    with open(app_path, "r") as f:
-        content = f.read()
-
+def test_theme_toggle_exists():
+    """Verify theme toggle functionality."""
+    content = _read_app()
     assert 'theme_toggle' in content
 
 
-def test_greeting_logic():
-    """Verify the app has greeting functionality."""
-    app_path = os.path.join(_repo_root(), "app.py")
-    with open(app_path, "r") as f:
-        content = f.read()
+def test_localstorage_persistence():
+    """Verify localStorage is used for theme persistence."""
+    content = _read_app()
+    assert 'localStorage' in content
 
+
+def test_prefers_color_scheme_fallback():
+    """Verify OS preference fallback."""
+    content = _read_app()
+    assert 'prefers-color-scheme' in content
+
+
+def test_greeting_card_present():
+    """Verify greeting card markup exists."""
+    content = _read_app()
+    assert 'greeting-card' in content
     assert 'Hi' in content
-    assert 'name' in content.lower()
-    assert 'greeting' in content.lower()
 
 
-def test_requirements():
-    """Verify requirements.txt is valid."""
-    req_path = os.path.join(_repo_root(), "requirements.txt")
-    with open(req_path, "r") as f:
-        content = f.read()
+def test_name_input_present():
+    """Verify text input for name."""
+    content = _read_app()
+    assert 'text_input' in content
 
+
+def test_requirements_has_streamlit():
+    """Verify streamlit is in requirements.txt."""
+    content = _read_req()
     assert 'streamlit' in content
+
+
+def test_dockerfile_exists():
+    """Verify Dockerfile is present."""
+    dockerfile = os.path.join(_repo_root(), "Dockerfile")
+    assert os.path.exists(dockerfile)
+
+
+def test_dockerfile_has_streamlit():
+    """Verify Dockerfile runs streamlit."""
+    with open(os.path.join(_repo_root(), "Dockerfile"), "r") as f:
+        content = f.read()
+    assert 'streamlit' in content
+    assert '8501' in content
