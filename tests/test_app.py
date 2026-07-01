@@ -2,7 +2,11 @@
 
 import os
 import sys
-import importlib
+
+
+def _repo_root():
+    """Get the repository root directory (parent of tests/)."""
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def test_app_imports():
@@ -19,10 +23,10 @@ def test_page_config():
 
 def test_theme_key_constant():
     """Verify the theme key is correctly defined."""
-    # Read the app source and check for the theme key
-    with open("app.py", "r") as f:
+    app_path = os.path.join(_repo_root(), "app.py")
+    with open(app_path, "r") as f:
         content = f.read()
-    
+
     assert 'THEME_KEY' in content
     assert 'theme_hi_app' in content
     assert 'localStorage' in content
@@ -31,9 +35,10 @@ def test_theme_key_constant():
 
 def test_dark_theme_css():
     """Verify dark theme CSS is present."""
-    with open("app.py", "r") as f:
+    app_path = os.path.join(_repo_root(), "app.py")
+    with open(app_path, "r") as f:
         content = f.read()
-    
+
     assert '[data-theme="dark"]' in content
     assert '--bg-primary' in content
     assert '--text-primary' in content
@@ -41,9 +46,10 @@ def test_dark_theme_css():
 
 def test_light_theme_css():
     """Verify light theme CSS is present."""
-    with open("app.py", "r") as f:
+    app_path = os.path.join(_repo_root(), "app.py")
+    with open(app_path, "r") as f:
         content = f.read()
-    
+
     assert '[data-theme="light"]' in content
     assert '--bg-primary' in content
     assert '--text-primary' in content
@@ -51,16 +57,15 @@ def test_light_theme_css():
 
 def test_both_themes_have_all_variables():
     """Ensure both themes define all CSS variables."""
-    with open("app.py", "r") as f:
+    app_path = os.path.join(_repo_root(), "app.py")
+    with open(app_path, "r") as f:
         content = f.read()
-    
-    # Extract CSS variable names from dark theme
+
     dark_start = content.index('[data-theme="dark"]')
     dark_end = content.index('[data-theme="light"]')
     dark_section = content[dark_start:dark_end]
-    
+
     light_start = content.index('[data-theme="light"]')
-    # Find end of light section (next closing brace after light start)
     brace_count = 0
     light_end = light_start
     for i, ch in enumerate(content[light_start:], light_start):
@@ -71,28 +76,30 @@ def test_both_themes_have_all_variables():
             if brace_count == 0:
                 light_end = i + 1
                 break
-    
+
     light_section = content[light_start:light_end]
-    
+
     dark_vars = {line.split(':')[0].strip() for line in dark_section.split('\n') if '--' in line and ':' in line}
     light_vars = {line.split(':')[0].strip() for line in light_section.split('\n') if '--' in line and ':' in line}
-    
+
     assert dark_vars == light_vars, f"CSS variable mismatch: dark has {dark_vars - light_vars}, light has {light_vars - dark_vars}"
 
 
 def test_theme_toggle_present():
     """Verify theme toggle is in the app."""
-    with open("app.py", "r") as f:
+    app_path = os.path.join(_repo_root(), "app.py")
+    with open(app_path, "r") as f:
         content = f.read()
-    
+
     assert 'theme_toggle' in content
 
 
 def test_greeting_logic():
     """Verify the app has greeting functionality."""
-    with open("app.py", "r") as f:
+    app_path = os.path.join(_repo_root(), "app.py")
+    with open(app_path, "r") as f:
         content = f.read()
-    
+
     assert 'Hi' in content
     assert 'name' in content.lower()
     assert 'greeting' in content.lower()
@@ -100,7 +107,8 @@ def test_greeting_logic():
 
 def test_requirements():
     """Verify requirements.txt is valid."""
-    with open("requirements.txt", "r") as f:
+    req_path = os.path.join(_repo_root(), "requirements.txt")
+    with open(req_path, "r") as f:
         content = f.read()
-    
+
     assert 'streamlit' in content
